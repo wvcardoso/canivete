@@ -1,0 +1,2 @@
+https://phoenixnap.com/kb/how-to-install-kubernetes-on-centos
+https://github.com/davidkbainbridge/k8s-playground/blob/master/ansible/roles/k8s-master/tasks/main.yml

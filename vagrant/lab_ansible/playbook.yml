@@ -1,0 +1,16 @@
+---
+- name: Playbook para instalação do HTTPD
+  hosts: all
+  become: yes
+
+  tasks:
+
+    - name: ensure httpd is at the latest version
+      yum: name=httpd state=present
+      notify:
+        - restart httpd
+
+  handlers:
+          
+    - name: restart httpd
+      service: name=httpd state=restarted

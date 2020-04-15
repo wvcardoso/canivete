@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+### Definindo VM1 - Master
+  config.vm.define "vm1" do |vm1|
+    vm1.vm.box      = "centos/7"
+    vm1.vm.hostname = "master-node"
+    vm1.vm.network "private_network", ip: "192.168.10.101"
+    vm1.vm.provider "virtualbox" do |v|
+      v.name        = "master-node"
+      v.customize [ "modifyvm", :id, "--cpus", "2" ]
+      v.customize [ "modifyvm", :id, "--memory", "1024" ]
+    end
+    vm1.vm.provision "shell", path: "nodes.sh"
+    vm1.vm.provision "shell", path: "master.sh"
+    vm1.vm.provision "shell", inline: "sudo hostnamectl set-hostname master-node"
+  end
+
+### Definindo VM2 - Node
+  config.vm.define "vm2" do |vm2|
+    vm2.vm.box      = "centos/7"
+    vm2.vm.hostname = "worker-node1"
+    vm2.vm.network "private_network", ip: "192.168.10.102"
+    vm2.vm.provider "virtualbox" do |v|
+      v.name        = "worker-node1"
+      v.customize [ "modifyvm", :id, "--cpus", "2" ]
+      v.customize [ "modifyvm", :id, "--memory", "2048" ]
+    end
+    vm2.vm.provision "shell", path: "nodes.sh"
+    vm2.vm.provision "shell", path: "workers.sh"
+    vm2.vm.provision "shell", inline: "sudo hostnamectl set-hostname worker-node1"
+  end
+
+### Definindo VM3 - Node
+  config.vm.define "vm3" do |vm3|
+    vm3.vm.box      = "centos/7"
+    vm3.vm.hostname = "worker-node2"
+    vm3.vm.network "private_network", ip: "192.168.10.103"
+    vm3.vm.provider "virtualbox" do |v|
+      v.name        = "worker-node2"
+      v.customize [ "modifyvm", :id, "--cpus", "2" ]
+      v.customize [ "modifyvm", :id, "--memory", "2048" ]
+    end
+    vm3.vm.provision "shell", path: "nodes.sh"
+    vm3.vm.provision "shell", path: "workers.sh"
+    vm3.vm.provision "shell", inline: "sudo hostnamectl set-hostname worker-node2"
+  end
+end

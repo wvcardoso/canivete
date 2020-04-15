@@ -1,0 +1,105 @@
+sudo apt install liblz4-dev liblzo2-dev libpam0g-dev libssl-dev net-tools
+cd
+
+wget https://swupdate.openvpn.org/community/releases/openvpn-2.4.8.tar.gz
+tar xfv openvpn-2.4.8.tar.gz
+cd openvpn-2.4.8/
+./configure --prefix=$HOME/bin/openvpn-lib --sbindir=$HOME/bin --libdir=$HOME/bin/openvpn-lib
+mkdir -p $HOME/bin/openvpn-lib
+make install
+
+
+
+cat > $HOME/bin/openvpn-lib/update-resolv-conf
+
+
+chmod 755 $HOME/bin/openvpn-lib/update-resolv-conf
+
+#!/bin/bash
+#
+# Parses DHCP options from openvpn to update resolv.conf
+# To use set as 'up' and 'down' script in your openvpn *.conf:
+# up /etc/openvpn/update-resolv-conf
+# down /etc/openvpn/update-resolv-conf
+#
+# Used snippets of resolvconf script by Thomas Hood and Chris Hanson.
+# Licensed under the GNU GPL.  See /usr/share/common-licenses/GPL.
+#
+# Example envs set from openvpn:
+#
+#     foreign_option_1='dhcp-option DNS 193.43.27.132'
+#     foreign_option_2='dhcp-option DNS 193.43.27.133'
+#     foreign_option_3='dhcp-option DOMAIN be.bnc.ch'
+#
+
+[ "$script_type" ] || exit 0
+[ "$dev" ] || exit 0
+
+split_into_parts()
+{
+        part1="$1"
+        part2="$2"
+        part3="$3"
+}
+
+case "$script_type" in
+  up)
+        NMSRVRS=""
+        SRCHS=""
+        for optionvarname in ${!foreign_option_*} ; do
+                option="${!optionvarname}"
+                echo "$option"
+                split_into_parts $option
+                if [ "$part1" = "dhcp-option" ] ; then
+                        if [ "$part2" = "DNS" ] ; then
+                                NMSRVRS="${NMSRVRS:+$NMSRVRS }$part3"
+                        elif [ "$part2" = "DOMAIN" ] ; then
+                                SRCHS="${SRCHS:+$SRCHS }$part3"
+                        fi
+                fi
+        done
+        R=""
+        [ "$SRCHS" ] && R="search $SRCHS
+"
+        for NS in $NMSRVRS ; do
+                R="${R}nameserver $NS
+"
+        done
+        cp /etc/resolv.conf /tmp/resolv.conf-orig
+        echo -n "$R" > /etc/resolv.conf
+        ;;
+  down)
+        cp /tmp/resolv.conf-orig /etc/resolv.conf
+        rm -f /tmp/resolv.conf-orig
+        ;;
+esac
+
+
+sudo $HOME/bin/openvpn --config $HOME/bin/openvpn-lib/SEU_ARQUIVO.ovpn --dev ovpntun0 --up $HOME/bin/openvpn-lib/update-resolv-conf --down $HOME/bin/openvpn-lib/update-resolv-conf --script-security 2'
+
+
+
+##### SCRIPT SHELL
+#!/bin/bash
+
+HOME=/home/willian
+sudo "$HOME/bin/openvpn" \
+        --config "$HOME/bin/willian.ovpn" \
+        --up     "$HOME/bin/openvpn-lib/update-resolv-conf" \
+        --down   "$HOME/bin/openvpn-lib/update-resolv-conf" \
+        --auth-user-pass "$HOME/bin/login.conf"
+
+##### SYSTEMCTL
+willian@willian:~/bin/openvpn-lib$ cat /etc/systemd/system/ivpn.service 
+[Unit]
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/home/willian/bin/ivpn.sh
+ExecStop=sudo pkill openvpn
+User=willian
+
+[Install]
+WantedBy=default.target
+
