@@ -4,7 +4,7 @@
 # packages
 # - curl
 
-_DOCKER_COMPOSE_VERSION="1.25.5"
+_DOCKER_COMPOSE_VERSION="1.27.4"
 _URL="https://github.com/docker/compose/releases/download/$_DOCKER_COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)"
 
 /usr/bin/sudo /usr/bin/curl -L $_URL -o /tmp/docker-compose
